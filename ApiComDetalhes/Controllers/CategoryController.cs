@@ -58,8 +58,16 @@ public class CategoryController : ControllerBase
         var category_found = await _context.Categorias.FindAsync(id);
         if (category_found is null) return StatusCode(404, new ApiError { Message = "O registro não foi encontrado", StatusCode = 404 });
 
-
-        _context.Categorias.Update(category);
+        foreach (var property in typeof(Models.Category).GetProperties())
+        {
+            var newValue = property.GetValue(category);
+            var oldValue = property.GetValue(category_found);
+            if (newValue != null && !newValue.Equals(oldValue) && property.Name != "Id")
+            {
+                property.SetValue(category_found, newValue);
+            }
+        }
+        _context.Categorias.Update(category_found);
         await _context.SaveChangesAsync();
 
         return StatusCode(200, category_found);
