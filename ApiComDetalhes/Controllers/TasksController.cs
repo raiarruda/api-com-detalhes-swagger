@@ -55,9 +55,17 @@ public class TasksController : ControllerBase
 
         var task_found = await _context.Tarefas.FindAsync(id);
         if (task_found is null) return StatusCode(404, new ApiError { Message = "O registro não foi encontrado", StatusCode = 404 });
+        foreach (var property in typeof(Models.Category).GetProperties())
+        {
+            var newValue = property.GetValue(task);
+            var oldValue = property.GetValue(task_found);
+            if (newValue != null && !newValue.Equals(oldValue) && property.Name != "Id")
+            {
+                property.SetValue(task_found, newValue);
+            }
+        }
 
-
-        _context.Tarefas.Update(task);
+        _context.Tarefas.Update(task_found);
         await _context.SaveChangesAsync();
 
         return StatusCode(200, task_found);
